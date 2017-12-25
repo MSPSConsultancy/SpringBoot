@@ -1,0 +1,290 @@
+<html>
+<head>
+   <title>Angular Custom Table Edit</title>
+        <style>
+            .btn-primary{
+                margin-right: 10px;
+            }
+        .container{
+            margin: 20px 0;
+        }
+</style>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.2/js/bootstrap.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+        <script type="text/javascript" >
+            
+            var app = angular.module("myapp", []);
+            app.controller("ListController", ['$scope','$http', function($scope,$http) {
+                                              
+                                              users = [{'userName': 'test5'},{'userName': 'test5'}];
+                                              
+                                              var test = $scope.users;
+                                              $scope.personalDetails = [
+                                                                        {
+                                                                        'fname':'Muhammed',
+                                                                        'lname':'Shanid',
+                                                                        'email':'shanid@shanid.com'
+                                                                        },
+                                                                        {
+                                                                        'fname':'John',
+                                                                        'lname':'Abraham',
+                                                                        'email':'john@john.com'
+                                                                        },
+                                                                        {
+                                                                        'fname':'Roy',
+                                                                        'lname':'Mathew',
+                                                                        'email':'roy@roy.com'
+                                                                        }];
+                                              
+                                              
+                                              
+                                                $http.get("http://127.0.0.1:8080/v1/items")
+                                              .then(function successCallback(response){
+                                                            $scope.items =  response.data;
+                                                    
+                                                    
+                                                    
+                                                    $http.get("http://127.0.0.1:8080/v1/users")
+                                                    .then(function successCallback(response){
+                                                          var i=1;
+                                                          
+                                                          $scope.users = response.data;
+                                                          $scope.ownerUsers = response.data;
+                                                          $scope['usersSelected_1'] = $scope.users[0];
+                                                          //alert('user -- '+JSON.stringify($scope.users[0]));
+                                                          
+                                            
+                                                          angular.forEach($scope.items, function(item) {
+                                                                          
+                                                                          item.selected = $scope.selectedAll;
+                                                                          
+                                                                          angular.forEach($scope.users, function(user) {
+                                                                                          if( item.ownerId == user.userId){
+                                                                                          item.ownerName = user.userName;
+                                                                                          
+                                                                                          }
+                                                                                          
+                                                                                          if( item.sharedByUserId == user.userId){
+                                                                                          item.sharedByUserName = user.userName;
+                                                                                          //item.userOwned.userName = = user.userName;
+                                                                                          //item.userOwned.userId = = user.userId;
+                                                                                          }
+                                                                                          
+                                                                                          
+                                                                                          });
+                                                                          
+                                                                          });
+                                                          
+                                                          
+                                                          
+                                                          }, function errorCallback(response){
+                                                          console.log("Unable to perform get request");
+                                                          });
+          
+                                                    // alert('item -- '+JSON.stringify($scope.items[0].userOwned));
+                                                     //$scope['usersSelected_1']=JSON.stringify($scope.items[0].userOwned);
+                                                    }, function errorCallback(response){
+                                                    console.log("Unable to perform get request");
+                                                    });
+                                            
+                                              
+                                              
+
+                                              
+                                              
+                                              $scope.addNew = function(personalDetail){
+                                              alert($scope.items);
+                                             // if($scope.items == 'undefined'){
+                                              $scope.items.push({
+                                                                          'itemName': "",
+                                                                          'ownerId': "",
+                                                                          'sharedByUserId': "",
+                                                                'userOwned': {},
+                                                                'sharedBy': {}
+                                                                          });
+                                            //  }
+                                              };
+                                              
+                                              
+                                              
+                                              
+                                            
+                                              $scope.remove = function(){
+                                              var newDataList=[];
+                                              $scope.selectedAll = false;
+                                           
+                                              $scope.users = newDataList;
+                                              };
+                                              
+                                              $scope.checkAll = function () {
+                                              if (!$scope.selectedAll) {
+                                              $scope.selectedAll = true;
+                                              } else {
+                                              $scope.selectedAll = false;
+                                              }
+                                              angular.forEach($scope.personalDetails, function(personalDetail) {
+                                                              personalDetail.selected = $scope.selectedAll;
+                                                              });
+                                              };    
+                                              
+                                              
+                                              $scope.changeOwnerValue = function(selected,index){
+                                            
+                                                $scope.items[index].ownerId = selected.userId;
+                                                $scope.items[index].ownerName = selected.userName;
+                                              $scope.items[index].userOwned.userName  = selected.userName;
+                                              $scope.items[index].userOwned.userId = selected.userId;
+                                              
+                                              
+                                              };
+                                              
+                                              
+                                              $scope.changeSharedValue = function(selected,index){
+                                              
+                                              if($scope.items[index].userOwned.userId == selected.userId){
+                                              alert("owner id and shared id cannot be the same");
+                                              return false;
+                                              }
+                                                    $scope.items[index].sharedByUserId = selected.userId;
+                                                    $scope.items[index].sharedByUserName = selected.userName;
+                                              
+                                              alert($scope.items[index].sharedBy);
+                                              $scope.items[index].sharedBy.userName  = selected.userName;
+                                              $scope.items[index].sharedBy.userId = selected.userId;
+                                              
+                                              alert(JSON.stringify($scope.items[index]));
+                                              };
+                                              
+                                              
+                                             
+                                              
+                                              //    Our POST request function
+                                              $scope.postRequest = function () {
+                                              
+                                              $http.post("http://127.0.0.1:8080/v1/items/createItemsToShare", angular.toJson($scope.items))
+                                              .then(function successCallback(response){
+                                                    console.log("Successfully POST-ed createUsers");
+                                                    }, function errorCallback(response){
+                                                    console.log("POST-ing of createUsers failed");
+                                                    });
+                                              };
+
+                                              
+                                              $scope.removeRow = function(itemId){
+                                              alert('itemid'+itemId);
+                                              var index = -1;
+                                              var item = eval( $scope.items );
+                                              for( var i = 0; i < $scope.items.length; i++ ) {
+                                              
+                                              if( item[i].itemId == itemId ) {
+                                              alert(item[i].itemId);
+                                              index = i;
+                                              break;
+                                              }
+                                              }
+                                              if( index === -1 ) {
+                                              alert( "Something gone wrong" );
+                                              }
+                                            
+                                              
+                                              // remove from db
+                                              alert(angular.toJson($scope.items[index]));
+                                              
+                                              $http.post("http://127.0.0.1:8080/v1/items/removeItem", angular.toJson($scope.items[index]))
+                                              .then(function successCallback(response){
+                                                      $scope.items.splice( index, 1 );
+                                                    }, function errorCallback(response){
+                                                    console.log("Unable to perform delete request");
+                                                    });
+                                              };
+                                              
+                                              }]);
+            
+            
+            </script>
+</head>
+<body ng-app="myapp" ng-controller="ListController">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <form ng-submit="addNew()">
+                            <table class="table table-striped table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th><input type="checkbox" ng-model="selectedAll" ng-click="checkAll()" /></th>
+                                        <th>Item Name</th>
+                                        <th>Item Owner</th>
+                                        <th></th>
+                                        <th>Item Shared By</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="item in items track by $index">
+                                        <td>
+                                            <input type="checkbox" ng-model="personalDetail.selected"  /></td>
+                                        <td>
+                                            <input type="text" class="form-control" ng-model="item.itemName"  required/></td>
+                                        <td>
+                                            <input type="text" class="form-control" ng-model="item.userOwned.userName" ng-readonly="true" required/></td>
+                                        <td>
+                                            <select name="users1" ng-options="user1.userName for user1 in ownerUsers" ng-change="changeOwnerValue(userselected1,$index)" ng-model="userselected1"
+                                                ="{{item.itemId == user1.userId}}" >
+                                                <option value="">Edit Owner</option>
+                                            </select>
+                                            
+                                            </td>
+                                        <td>
+                                            <input type="text" class="form-control" ng-model="item.sharedBy.userName" ng-readonly="true" required/>
+                                        
+                                        </td>
+                                        <td>
+                                        <select name="users2" ng-options="user2.userName for user2 in users" ng-change="changeSharedValue(userselected2,$index)" ng-model="userselected2"
+                                            ="{{item.itemId == user2.userId}}" >
+                                            <option value="">Edit Shared User</option>
+                                        </select>
+                                        </td>
+                                        <td>
+                                            <input type="button" value="Remove" class="btn btn-primary" ng-click="removeRow(item.itemId)"/>
+                                        </td>
+                                        <!--td>
+                                           
+                                           <select class="form-control" >
+                                                <option ng-repeat="user in                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 users" ng-selected="{{item.itemId == user.userId}}">{{user.userId}}
+                                                </option>
+                                            </select>
+                                            
+                                              <!--option ng-repeat="data in vm.options" ng-selected="{{data.id == 3}}">{{data.label}} = Hallo</option>
+                                            <!--select
+                                                 ng-init=""
+                                                ng-model="items[1].sharedByUserId"
+                                                ng-options="user.userId for user in users track by user.userId">{{$index}}
+                                            </select>
+                                              
+                                              
+                                              
+                                            
+                                              
+                                        </td-->
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <a ng-href='#here' ng-click='postRequest()' >Save Changes to List</a>
+                            <div class="form-group">
+                                <input ng-hide="!items.length" type="button" class="btn btn-danger pull-right" ng-click="remove()" value="Remove">
+                                    <input type="submit" class="btn btn-primary addnew pull-right" value="Add New">
+                                        </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+
+   
+</html>
